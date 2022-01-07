@@ -12,14 +12,18 @@ logging.basicConfig(filename='houm_challenge_log.log', filemode='w', format='%(n
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+#Function to get json data from a url passed by parameter
+def get_json_from_url(url:AnyStr) -> Dict:
+
+    return httpx.get(url).json()
 
 # Function to answer the first question of the challenge. Receives no parameters and returns int (Integer)
 # Retrieves the entire pokemon list from the endpoint 'pokemon'. The limit is set to 1118 as it was found by
 # trial in the API. This way of retrieving all pokemon was chosen as it saves the need to request once per
 # pokemon, by retrieving all pokemon in one request.
-def first_question() -> Integer:
+def pokemon_name_checker() -> Integer:
 
-    response: Dict = httpx.get(base_url + 'pokemon?limit=1118').json()
+    response: Dict = get_json_from_url(base_url + 'pokemon?limit=1118')
     pokemons_list: List = response['results']
     question_answer: Integer = 0
 
@@ -34,20 +38,20 @@ def first_question() -> Integer:
 
 
 # Stores the result of the first question by calling the function "first_question()"
-logger.info(str(first_question()))
+logger.info(str(pokemon_name_checker()))
 
 
 # Function to answer the second question of the challenge. Receives no parameters and returns int (Integer).
 # Takes Raichu's information, where his egg groups are stored, to then count all pokemon belonging to those egg
 # groups. A list with pokemon names is used to store the names of Pokemons counted and avoid duplicates.
-def second_question() -> Integer:
-    raichu_info: Dict = httpx.get(base_url + 'pokemon-species/raichu/').json()
+def pokemon_breeding_verifier() -> Integer:
+    raichu_info: Dict = get_json_from_url(base_url + 'pokemon-species/raichu/')
     egg_groups: List = raichu_info['egg_groups']
     question_answer: Integer = 0
     species_checked: List = []
 
     for egg_group in egg_groups:
-        group_data: Dict = httpx.get(egg_group['url']).json()
+        group_data: Dict = get_json_from_url(egg_group['url'])
         pokemon_species: List = group_data['pokemon_species']
 
         for species in pokemon_species:
@@ -63,16 +67,16 @@ def second_question() -> Integer:
 
 
 # Stores the result of the first question by calling the function "second_question()"
-logger.info(str(second_question()))
+logger.info(str(pokemon_breeding_verifier()))
 
 
 # Function to answer the third question of the challenge. Receives no parameters and returns a list.
 # Retrieves all Pokemon from Generation 1 and then checks if their 'id' is less than or equal to 151.
 # Then checks if the Pokemon's type(s) include 'fighting'. If that's the case, it stores the Pokemon's
 # weight in a list, to which ma and min functions are applied to return the desired answer.
-def third_question() -> List:
+def min_max_pokemon_weight() -> List:
     weight_list: List = []
-    gen_i_information: Dict = httpx.get(base_url + 'generation/1/').json()
+    gen_i_information: Dict = get_json_from_url(base_url + 'generation/1/')
     pokemon_gen_i: List = gen_i_information['pokemon_species']
 
     for pokemon in pokemon_gen_i:
@@ -82,7 +86,7 @@ def third_question() -> List:
         pokemon_index = int(split_url[1].replace('/', ''))
 
         if pokemon_index < 152:
-            pokemon_info = httpx.get(base_url + 'pokemon/' + pokemon_name + '/').json()
+            pokemon_info = get_json_from_url(base_url + 'pokemon/' + pokemon_name + '/')
             pokemon_types = pokemon_info['types']
 
             for info_type in pokemon_types:
@@ -96,4 +100,4 @@ def third_question() -> List:
 
 
 # Stores the result of the first question by calling the function "third_question()"
-logger.info(str(third_question()))
+logger.info(str(min_max_pokemon_weight()))
