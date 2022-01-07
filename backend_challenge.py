@@ -36,11 +36,18 @@ def pokemon_name_checker() -> Integer:
 
     for pokemon_dictionary in pokemons_list:
         pokemon_name = pokemon_dictionary['name']
-        if 'at' in pokemon_name:
-            pokemon_name.replace('at', '')
-            if 'a' in pokemon_name:
-                pokemon_name.replace('a', '')
-                question_answer += 1
+        print(pokemon_name)
+        if pokemon_name.count('a') == 2:
+            if 'at' in pokemon_name:
+                pokemon_name = pokemon_name.replace('at', '-')
+                if pokemon_name.count('-')==1:
+                    count_a = pokemon_name.count('a')
+                    if count_a == 1:
+                        question_answer+=1
+                elif pokemon_name.count('-')==2:
+                    count_a = pokemon_name.count('a')
+                    if count_a == 0:
+                        question_answer += 1
 
     return question_answer
 
