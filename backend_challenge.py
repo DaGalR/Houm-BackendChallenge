@@ -13,7 +13,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-# Function to get json data from a url passed by parameter. Raises exception for specific HTTP error codes (starting with 4 or 5).
+# Function to get json data from a url passed by parameter. Raises exception for specific HTTP error codes (starting
+# with 4 or 5).
 def get_json_from_url(url: AnyStr) -> Dict:
     response = httpx.get(url)
     try:
