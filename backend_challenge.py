@@ -1,41 +1,24 @@
 import logging
-import math
-
 import httpx
-from typing import AnyStr, Dict, List, Tuple
+from typing import AnyStr, Dict, List
 
-# r = httpx.get("https://pokeapi.co/api/v2/pokemon/ditto")
-
-# print(base_url)
-# ditto = r.json()
-# print(type(ditto))
-# response = httpx.get(base_url+'pokemon?limit=1118')
-# print(response.json())
-# response: Dict = httpx.get(base_url + 'pokemon?limit=1118').json()
-# names: List = response['results']
-# for i in range(0, 9):
-#     print(names[i]['name'])
-
-# a = 'atremover'
-# print(a)
-# if 'at' in a:
-#     a = a.replace('at', '')
-#     print(a)
-
+# Define a Base URL from which the API calls will be made by adding the required endpoint detail
 base_url: AnyStr = 'https://pokeapi.co/api/v2/'
+# Use Typing's alias to implement int type as "Integer"
 Integer = int
 
+# Configure logging to store results from each function
 logging.basicConfig(filename='houm_challenge_log.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
-# raichu_info: Dict = httpx.get(base_url + 'pokemon-species/raichu/').json()
-# egg_groups: List = raichu_info['egg_groups']
-# print(egg_groups)
-
-
+# Function to answer the first question of the challenge. Receives no parameters and returns int (Integer)
+# Retrieves the entire pokemon list from the endpoint 'pokemon'. The limit is set to 1118 as it was found by
+# trial in the API. This way of retrieving all pokemon was chosen as it saves the need to request once per
+# pokemon, by retrieving all pokemon in one request.
 def first_question() -> Integer:
+
     response: Dict = httpx.get(base_url + 'pokemon?limit=1118').json()
     pokemons_list: List = response['results']
     question_answer: Integer = 0
@@ -50,9 +33,13 @@ def first_question() -> Integer:
     return question_answer
 
 
+# Stores the result of the first question by calling the function "first_question()"
 logger.info(str(first_question()))
 
 
+# Function to answer the second question of the challenge. Receives no parameters and returns int (Integer).
+# Takes Raichu's information, where his egg groups are stored, to then count all pokemon belonging to those egg
+# groups. A list with pokemon names is used to store the names of Pokemons counted and avoid duplicates.
 def second_question() -> Integer:
     raichu_info: Dict = httpx.get(base_url + 'pokemon-species/raichu/').json()
     egg_groups: List = raichu_info['egg_groups']
@@ -65,6 +52,7 @@ def second_question() -> Integer:
 
         for species in pokemon_species:
             name = species['name']
+            # Ensures duplicates are not counted by checking if a Pokemon has not already been counted
             if name not in species_checked:
                 species_checked.append(name)
                 question_answer += 1
@@ -74,9 +62,38 @@ def second_question() -> Integer:
     return question_answer
 
 
+# Stores the result of the first question by calling the function "second_question()"
 logger.info(str(second_question()))
 
 
+# Function to answer the third question of the challenge. Receives no parameters and returns a list.
+# Retrieves all Pokemon from Generation 1 and then checks if their 'id' is less than or equal to 151.
+# Then checks if the Pokemon's type(s) include 'fighting'. If that's the case, it stores the Pokemon's
+# weight in a list, to which ma and min functions are applied to return the desired answer.
 def third_question() -> List:
-    max_weigh: Integer = math.inf
-    min_weigh: Integer = 0
+    weight_list: List = []
+    gen_i_information: Dict = httpx.get(base_url + 'generation/1/').json()
+    pokemon_gen_i: List = gen_i_information['pokemon_species']
+
+    for pokemon in pokemon_gen_i:
+        pokemon_url = pokemon['url']
+        pokemon_name = pokemon['name']
+        split_url = pokemon_url.split('species/')
+        pokemon_index = int(split_url[1].replace('/', ''))
+
+        if pokemon_index < 152:
+            pokemon_info = httpx.get(base_url + 'pokemon/' + pokemon_name + '/').json()
+            pokemon_types = pokemon_info['types']
+
+            for info_type in pokemon_types:
+                type_name = info_type['type']['name']
+
+                if type_name == 'fighting':
+                    pokemon_weight = pokemon_info['weight']
+                    weight_list.append(pokemon_weight)
+
+    return [max(weight_list), min(weight_list)]
+
+
+# Stores the result of the first question by calling the function "third_question()"
+logger.info(str(third_question()))
