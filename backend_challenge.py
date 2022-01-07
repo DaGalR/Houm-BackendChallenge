@@ -12,17 +12,23 @@ logging.basicConfig(filename='houm_challenge_log.log', filemode='w', format='%(n
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-#Function to get json data from a url passed by parameter
-def get_json_from_url(url:AnyStr) -> Dict:
 
-    return httpx.get(url).json()
+# Function to get json data from a url passed by parameter. Raises exception for specific HTTP error codes (starting with 4 or 5).
+def get_json_from_url(url: AnyStr) -> Dict:
+    response = httpx.get(url)
+    try:
+        response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        logging.warning(f"Error response {exc.response.status_code} while requesting {exc.request.url!r}.")
+
+    return response.json()
+
 
 # Function to answer the first question of the challenge. Receives no parameters and returns int (Integer)
 # Retrieves the entire pokemon list from the endpoint 'pokemon'. The limit is set to 1118 as it was found by
 # trial in the API. This way of retrieving all pokemon was chosen as it saves the need to request once per
 # pokemon, by retrieving all pokemon in one request.
 def pokemon_name_checker() -> Integer:
-
     response: Dict = get_json_from_url(base_url + 'pokemon?limit=1118')
     pokemons_list: List = response['results']
     question_answer: Integer = 0
@@ -32,6 +38,7 @@ def pokemon_name_checker() -> Integer:
         if 'at' in pokemon_name:
             pokemon_name.replace('at', '')
             if 'a' in pokemon_name:
+                pokemon_name.replace('a', '')
                 question_answer += 1
 
     return question_answer
